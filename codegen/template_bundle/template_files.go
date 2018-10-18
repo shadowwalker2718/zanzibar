@@ -1705,6 +1705,7 @@ func InitializeDependenciesMock(
 
 	initializedDefaultDependencies := &zanzibar.DefaultDependencies{
 		ContextExtractor: g.ContextExtractor,
+		ContextMetrics: g.ContextMetrics,
 		ContextLogger: g.ContextLogger,
 		Logger:  	   g.Logger,
 		Scope:         g.AllHostScope,
@@ -1763,7 +1764,7 @@ func module_mock_initializerTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "module_mock_initializer.tmpl", size: 4291, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "module_mock_initializer.tmpl", size: 4327, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

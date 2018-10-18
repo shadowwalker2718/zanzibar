@@ -77,6 +77,7 @@ func InitializeDependenciesMock(
 
 	initializedDefaultDependencies := &zanzibar.DefaultDependencies{
 		ContextExtractor: g.ContextExtractor,
+		ContextMetrics:   g.ContextMetrics,
 		ContextLogger:    g.ContextLogger,
 		Logger:           g.Logger,
 		Scope:            g.AllHostScope,
