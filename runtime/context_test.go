@@ -24,6 +24,7 @@ import (
 	"context"
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/uber-go/tally"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"testing"
@@ -196,6 +197,35 @@ func TestContextLogger(t *testing.T) {
 	logMessages = logs.TakeAll()
 	assert.Len(t, logMessages, 1)
 	assert.Equal(t, zap.ErrorLevel, logMessages[0].Level)
+}
+
+func TestContextMetrics(t *testing.T) {
+	ctx := context.Background()
+	contextMetrics := NewContextMetrics(tally.NewTestScope("test", make(map[string]string)))
+	endpointTags := map[string]string{"endpoint": "tincup", "handler": "exchange"}
+	ctx = WithEndpointScopeFields(ctx, endpointTags)
+	key := tally.KeyForPrefixedStringMap(
+		"test", endpointTags,
+	)
+	endpointMetrics := contextMetrics.getEndpointMetrics(key)
+	assert.Nil(t, endpointMetrics)
+	endpointMetrics = contextMetrics.GetOrAddEndpointMetrics(ctx)
+	assert.NotNil(t, endpointMetrics)
+
+	requestTags := map[string]string{"region": "san_francisco", "os": "ios"}
+	ctx = WithRequestScopeFields(ctx, requestTags)
+	key = tally.KeyForPrefixedStringMap(
+		"test", requestTags,
+	)
+	inboundHTTPMetrics := contextMetrics.getInboundHTTPMetrics(key)
+	assert.Nil(t, inboundHTTPMetrics)
+	inboundHTTPMetrics = contextMetrics.GetOrAddInboundHTTPMetrics(ctx)
+	assert.NotNil(t, inboundHTTPMetrics)
+
+	inboundTChannelMetrics := contextMetrics.getInboundTChannelMetrics(key)
+	assert.Nil(t, inboundTChannelMetrics)
+	inboundTChannelMetrics = contextMetrics.GetOrAddInboundTChannelMetrics(ctx)
+	assert.NotNil(t, inboundTChannelMetrics)
 }
 
 func TestContextLoggerPanic(t *testing.T) {

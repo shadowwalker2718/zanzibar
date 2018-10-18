@@ -301,6 +301,9 @@ type ContextMetrics interface {
 	GetOrAddInboundHTTPMetrics(ctx context.Context) *InboundHTTPMetrics
 	GetOrAddEndpointMetrics(ctx context.Context) *EndpointMetrics
 	GetOrAddInboundTChannelMetrics(ctx context.Context) *InboundTChannelMetrics
+	getEndpointMetrics(key string) *EndpointMetrics
+	getInboundHTTPMetrics(key string) *InboundHTTPMetrics
+	getInboundTChannelMetrics(key string) *InboundTChannelMetrics
 }
 
 type contextMetrics struct {
@@ -353,5 +356,17 @@ func (c *contextMetrics) GetOrAddInboundTChannelMetrics(ctx context.Context) *In
 		c.inboundTChannelMetrics[key] = NewInboundTChannelMetrics(scope)
 	}
 
+	return c.inboundTChannelMetrics[key]
+}
+
+func (c *contextMetrics) getEndpointMetrics(key string) *EndpointMetrics {
+	return c.endpointMetrics[key]
+}
+
+func (c *contextMetrics) getInboundHTTPMetrics(key string) *InboundHTTPMetrics {
+	return c.inboundHTTPMetrics[key]
+}
+
+func (c *contextMetrics) getInboundTChannelMetrics(key string) *InboundTChannelMetrics {
 	return c.inboundTChannelMetrics[key]
 }
