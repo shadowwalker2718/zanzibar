@@ -87,6 +87,7 @@ func NewRouterEndpoint(
 // NewRouterEndpointContext creates an endpoint with all the necessary data
 func NewRouterEndpointContext(
 	extractor ContextExtractor,
+	contextMetrics ContextMetrics,
 	logger *zap.Logger,
 	scope tally.Scope,
 	tracer opentracing.Tracer,
@@ -94,10 +95,6 @@ func NewRouterEndpointContext(
 	handlerID string,
 	handler HandlerFn,
 ) *RouterEndpoint {
-	contextMetrics := NewContextMetrics(scope)
-	scopeFields := map[string]string{scopeFieldEndpoint: endpointID, scopeFieldHandler: handlerID}
-	contextMetrics.MakeEndpointMetrics(scopeFields)
-
 	return &RouterEndpoint{
 		EndpointName:     endpointID,
 		HandlerName:      handlerID,
@@ -106,7 +103,7 @@ func NewRouterEndpointContext(
 		contextLogger:    NewContextLogger(logger),
 		logger:           logger,
 		tracer:           tracer,
-		ContextMetrics:   *contextMetrics,
+		ContextMetrics:   contextMetrics,
 	}
 }
 
@@ -131,19 +128,19 @@ func (endpoint *RouterEndpoint) HandleRequest(
 	)
 
 	scopeFields := map[string]string{scopeFieldEndpoint: endpoint.EndpointName, scopeFieldHandler: endpoint.HandlerName}
-	ctx, tags := WithScopeFields(ctx, scopeFields)
+	ctx = WithEndpointScopeFields(ctx, scopeFields)
 	headers := map[string]string{}
 	for k, v := range r.Header {
 		headers[k] = v[0]
 	}
 
 	ctx = WithEndpointRequestHeadersField(ctx, headers)
-	r = r.WithContext(ctx)
 	for k, v := range endpoint.contextExtractor.ExtractScopeTags(ctx) {
-		tags[k] = v
+		scopeFields[k] = v
 	}
 
-	endpoint.ContextMetrics.MakeInboundHTTPMetrics(tags)
+	ctx = WithRequestScopeFields(ctx, scopeFields)
+	r = r.WithContext(ctx)
 	req := NewServerHTTPRequest(w, r, params, endpoint)
 	endpoint.HandlerFn(ctx, req, req.res)
 	req.res.flush()
@@ -163,11 +160,11 @@ type HTTPRouter struct {
 func NewHTTPRouter(gateway *Gateway) *HTTPRouter {
 	router := &HTTPRouter{
 		notFoundEndpoint: NewRouterEndpointContext(
-			gateway.ContextExtractor, gateway.Logger, gateway.AllHostScope, gateway.Tracer,
+			gateway.ContextExtractor, gateway.ContextMetrics, gateway.Logger, gateway.AllHostScope, gateway.Tracer,
 			notFound, notFound, nil,
 		),
 		methodNotAllowedEndpoint: NewRouterEndpointContext(
-			gateway.ContextExtractor, gateway.Logger, gateway.AllHostScope, gateway.Tracer,
+			gateway.ContextExtractor, gateway.ContextMetrics, gateway.Logger, gateway.AllHostScope, gateway.Tracer,
 			methodNotAllowed, methodNotAllowed, nil,
 		),
 		gateway:    gateway,
@@ -226,7 +223,7 @@ func (router *HTTPRouter) RegisterRaw(
 	router.httpRouter.Handler(method, prefix, handler)
 }
 
-// Deprecated: Register will register an endpoint with the router.
+// Register will register an endpoint with the router.
 func (router *HTTPRouter) Register(
 	method, urlpattern string,
 	endpoint *RouterEndpoint,
@@ -258,7 +255,9 @@ func (router *HTTPRouter) handleNotFound(
 	r *http.Request,
 ) {
 	scopeFields := map[string]string{scopeFieldEndpoint: router.notFoundEndpoint.EndpointName, scopeFieldHandler: router.notFoundEndpoint.HandlerName}
-	router.notFoundEndpoint.ContextMetrics.MakeInboundHTTPMetrics(scopeFields)
+	ctx := r.Context()
+	ctx = WithEndpointScopeFields(ctx, scopeFields)
+	r = r.WithContext(ctx)
 	req := NewServerHTTPRequest(w, r, nil, router.notFoundEndpoint)
 	http.NotFound(w, r)
 	req.res.StatusCode = http.StatusNotFound
@@ -270,7 +269,9 @@ func (router *HTTPRouter) handleMethodNotAllowed(
 	r *http.Request,
 ) {
 	scopeFields := map[string]string{scopeFieldEndpoint: router.notFoundEndpoint.EndpointName, scopeFieldHandler: router.notFoundEndpoint.HandlerName}
-	router.methodNotAllowedEndpoint.ContextMetrics.MakeInboundHTTPMetrics(scopeFields)
+	ctx := r.Context()
+	ctx = WithEndpointScopeFields(ctx, scopeFields)
+	r = r.WithContext(ctx)
 	req := NewServerHTTPRequest(w, r, nil, router.methodNotAllowedEndpoint)
 	http.Error(w,
 		http.StatusText(http.StatusMethodNotAllowed),

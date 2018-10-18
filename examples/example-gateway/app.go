@@ -32,13 +32,13 @@ var AppOptions = &zanzibar.Options{
 
 func getContextScopeTagExtractors() []zanzibar.ContextScopeTagsExtractor {
 	extractors := []zanzibar.ContextScopeTagsExtractor{
-		getEndpointTags,
+		getRequestTags,
 	}
 
 	return extractors
 }
 
-func getEndpointTags(ctx context.Context) map[string]string {
+func getRequestTags(ctx context.Context) map[string]string {
 	tags := map[string]string{}
 	headers := zanzibar.GetEndpointRequestHeadersFromCtx(ctx)
 	tags["regionname"] = headers["Regionname"]

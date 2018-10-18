@@ -27,7 +27,6 @@ import (
 	"context"
 
 	clientsCorgeCorge "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/corge/corge"
-
 	"github.com/uber/zanzibar/runtime"
 	"go.uber.org/thriftrw/wire"
 )

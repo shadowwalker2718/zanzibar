@@ -25,11 +25,10 @@ package echogatewayservicegeneratedmock
 
 import (
 	"github.com/golang/mock/gomock"
-	module "github.com/uber/zanzibar/examples/example-gateway/build/services/echo-gateway/module"
-	zanzibar "github.com/uber/zanzibar/runtime"
-
 	echoendpointgenerated "github.com/uber/zanzibar/examples/example-gateway/build/endpoints/tchannel/echo"
 	echoendpointmodule "github.com/uber/zanzibar/examples/example-gateway/build/endpoints/tchannel/echo/module"
+	module "github.com/uber/zanzibar/examples/example-gateway/build/services/echo-gateway/module"
+	zanzibar "github.com/uber/zanzibar/runtime"
 )
 
 // MockNodes contains mock  dependencies

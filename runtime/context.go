@@ -39,6 +39,7 @@ const (
 	routingDelegateKey    = contextFieldKey("rd")
 	endpointRequestHeader = contextFieldKey("endpointRequestHeader")
 	requestLogFields      = contextFieldKey("requestLogFields")
+	endpointScopeFields   = contextFieldKey("endpointScopeFields")
 	requestScopeFields    = contextFieldKey("requestScopeFields")
 )
 
@@ -148,20 +149,43 @@ func WithLogFields(ctx context.Context, newFields ...zap.Field) context.Context 
 	return context.WithValue(ctx, requestLogFields, accumulateLogFields(ctx, newFields))
 }
 
-// WithScopeFields returns a new context and tags with the given scope fields attached to context.Context
-func WithScopeFields(ctx context.Context, newFields map[string]string) (context.Context, map[string]string) {
-	fields := GetScopeFieldsFromCtx(ctx)
+// WithRequestScopeFields returns a new context with the given scope fields attached to context.Context
+func WithRequestScopeFields(ctx context.Context, newFields map[string]string) context.Context {
+	fields := GetRequestScopeFieldsFromCtx(ctx)
 	for k, v := range newFields {
 		fields[k] = v
 	}
 
-	return context.WithValue(ctx, requestScopeFields, fields), fields
+	return context.WithValue(ctx, requestScopeFields, fields)
 }
 
-// GetScopeFieldsFromCtx returns the tag info extracted from context.
-func GetScopeFieldsFromCtx(ctx context.Context) map[string]string {
+// GetRequestScopeFieldsFromCtx returns the tag info extracted from context.
+func GetRequestScopeFieldsFromCtx(ctx context.Context) map[string]string {
 	fields := make(map[string]string)
 	if val := ctx.Value(requestScopeFields); val != nil {
+		headers, _ := val.(map[string]string)
+		for k, v := range headers {
+			fields[k] = v
+		}
+	}
+
+	return fields
+}
+
+// WithEndpointScopeFields returns a new context with the given scope fields attached to context.Context
+func WithEndpointScopeFields(ctx context.Context, newFields map[string]string) context.Context {
+	fields := GetEndpointScopeFieldsFromCtx(ctx)
+	for k, v := range newFields {
+		fields[k] = v
+	}
+
+	return context.WithValue(ctx, endpointScopeFields, fields)
+}
+
+// GetEndpointScopeFieldsFromCtx returns the tag info extracted from context.
+func GetEndpointScopeFieldsFromCtx(ctx context.Context) map[string]string {
+	fields := make(map[string]string)
+	if val := ctx.Value(endpointScopeFields); val != nil {
 		headers, _ := val.(map[string]string)
 		for k, v := range headers {
 			fields[k] = v
@@ -272,35 +296,62 @@ func (c *contextLogger) Check(lvl zapcore.Level, msg string) *zapcore.CheckedEnt
 	return c.log.Check(lvl, msg)
 }
 
-// ContextMetrics emits metrics
-type ContextMetrics struct {
+// ContextMetrics emits metrics.
+type ContextMetrics interface {
+	GetOrAddInboundHTTPMetrics(ctx context.Context) *InboundHTTPMetrics
+	GetOrAddEndpointMetrics(ctx context.Context) *EndpointMetrics
+	GetOrAddInboundTChannelMetrics(ctx context.Context) *InboundTChannelMetrics
+}
+
+type contextMetrics struct {
 	scope                  tally.Scope
-	InboundHTTPMetrics     *InboundHTTPMetrics
-	EndpointMetrics        *EndpointMetrics
-	InboundTChannelMetrics *InboundTChannelMetrics
+	endpointMetrics        map[string]*EndpointMetrics
+	inboundHTTPMetrics     map[string]*InboundHTTPMetrics
+	inboundTChannelMetrics map[string]*InboundTChannelMetrics
 }
 
 // NewContextMetrics emits metrics.
-func NewContextMetrics(scope tally.Scope) *ContextMetrics {
-	return &ContextMetrics{
-		scope: scope,
+func NewContextMetrics(scope tally.Scope) ContextMetrics {
+	return &contextMetrics{
+		scope:                  scope,
+		endpointMetrics:        make(map[string]*EndpointMetrics),
+		inboundHTTPMetrics:     make(map[string]*InboundHTTPMetrics),
+		inboundTChannelMetrics: make(map[string]*InboundTChannelMetrics),
 	}
 }
 
-// MakeInboundHTTPMetrics add tags to scope and create inbound http metrics
-func (c *ContextMetrics) MakeInboundHTTPMetrics(tags map[string]string)  {
-	scope := c.scope.Tagged(tags)
-	c.InboundHTTPMetrics = NewInboundHTTPMetrics(scope)
+// GetOrAddInboundHTTPMetrics add tags to scope and create inbound http metrics
+func (c *contextMetrics) GetOrAddInboundHTTPMetrics(ctx context.Context) *InboundHTTPMetrics {
+	tags := GetRequestScopeFieldsFromCtx(ctx)
+	key := tally.KeyForStringMap(tags)
+	if _, ok := c.inboundHTTPMetrics[key]; !ok {
+		scope := c.scope.Tagged(tags)
+		c.inboundHTTPMetrics[key] = NewInboundHTTPMetrics(scope)
+	}
+
+	return c.inboundHTTPMetrics[key]
 }
 
-// MakeEndpointMetrics add tags to scope and create endpoint metrics
-func (c *ContextMetrics) MakeEndpointMetrics(tags map[string]string) {
-	scope := c.scope.Tagged(tags)
-	c.EndpointMetrics = NewEndpointMetrics(scope)
+// GetOrAddEndpointMetrics add tags to scope and create endpoint metrics
+func (c *contextMetrics) GetOrAddEndpointMetrics(ctx context.Context) *EndpointMetrics {
+	tags := GetEndpointScopeFieldsFromCtx(ctx)
+	key := tally.KeyForStringMap(tags)
+	if _, ok := c.endpointMetrics[key]; !ok {
+		scope := c.scope.Tagged(tags)
+		c.endpointMetrics[key] = NewEndpointMetrics(scope)
+	}
+
+	return c.endpointMetrics[key]
 }
 
-// MakeInboundTChannelMetrics add tags to scope and create inbound tchannel metrics
-func (c *ContextMetrics) MakeInboundTChannelMetrics(tags map[string]string) {
-	scope := c.scope.Tagged(tags)
-	c.InboundTChannelMetrics = NewInboundTChannelMetrics(scope)
+// GetOrAddInboundTChannelMetrics add tags to scope and create inbound tchannel metrics
+func (c *contextMetrics) GetOrAddInboundTChannelMetrics(ctx context.Context) *InboundTChannelMetrics {
+	tags := GetRequestScopeFieldsFromCtx(ctx)
+	key := tally.KeyForStringMap(tags)
+	if _, ok := c.inboundTChannelMetrics[key]; !ok {
+		scope := c.scope.Tagged(tags)
+		c.inboundTChannelMetrics[key] = NewInboundTChannelMetrics(scope)
+	}
+
+	return c.inboundTChannelMetrics[key]
 }

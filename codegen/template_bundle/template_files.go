@@ -247,7 +247,6 @@ import (
 	"go.uber.org/thriftrw/ptr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	module "{{$instance.PackageInfo.ModulePackagePath}}"
 	zanzibar "github.com/uber/zanzibar/runtime"
 
 	{{range $idx, $pkg := .IncludedPackages -}}
@@ -267,7 +266,7 @@ import (
 	{{- end}}
 	{{- end}}
 
-
+	module "{{$instance.PackageInfo.ModulePackagePath}}"
 )
 
 {{with .Method -}}
@@ -284,7 +283,7 @@ func New{{$handlerName}}(deps *module.Dependencies) *{{$handlerName}} {
 		Dependencies: deps,
 	}
 	handler.endpoint = zanzibar.NewRouterEndpointContext(
-		deps.Default.ContextExtractor, deps.Default.Logger, deps.Default.Scope, deps.Default.Tracer,
+		deps.Default.ContextExtractor, deps.Default.ContextMetrics, deps.Default.Logger, deps.Default.Scope, deps.Default.Tracer,
 		"{{$endpointId}}", "{{$handleId}}",
 		{{ if len $middlewares | ne 0 -}}
 		zanzibar.NewStack([]zanzibar.MiddlewareHandle{
@@ -331,7 +330,7 @@ func (h *{{$handlerName}}) HandleRequest(
 				zap.String("stacktrace", stacktrace),
 				zap.String("endpoint", h.endpoint.EndpointName))
 
-			h.endpoint.ContextMetrics.EndpointMetrics.Panic.Inc(1)
+			h.endpoint.ContextMetrics.GetOrAddEndpointMetrics(ctx).Panic.Inc(1)
 			res.SendError(502, "Unexpected workflow panic, recovered at endpoint.", nil)
 		}
 	}()
@@ -464,7 +463,7 @@ func endpointTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "endpoint.tmpl", size: 6939, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "endpoint.tmpl", size: 6980, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1609,6 +1608,7 @@ func InitializeDependencies(
 		Logger:         g.Logger,
 		ContextExtractor: g.ContextExtractor,
 		ContextLogger:  g.ContextLogger,
+		ContextMetrics: zanzibar.NewContextMetrics(g.AllHostScope),
 		Scope:          g.AllHostScope,
 		Tracer:         g.Tracer,
 		Config:         g.Config,
@@ -1644,7 +1644,7 @@ func module_initializerTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "module_initializer.tmpl", size: 2347, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "module_initializer.tmpl", size: 2409, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2489,7 +2489,7 @@ func (h *{{$handlerName}}) Handle(
 				zap.String("stacktrace", stacktrace),
 				zap.String("endpoint", h.endpoint.EndpointID))
 
-			h.endpoint.ContextMetrics.EndpointMetrics.Panic.Inc(1)
+			h.endpoint.ContextMetrics.GetOrAddEndpointMetrics(ctx).Panic.Inc(1)
 			isSuccessful = false
 			response = nil
 			headers = nil
@@ -2667,7 +2667,7 @@ func tchannel_endpointTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tchannel_endpoint.tmpl", size: 8152, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "tchannel_endpoint.tmpl", size: 8165, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

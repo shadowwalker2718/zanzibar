@@ -52,6 +52,7 @@ func TestTrailingSlashRoutes(t *testing.T) {
 		"GET", "/foo",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,
@@ -70,6 +71,7 @@ func TestTrailingSlashRoutes(t *testing.T) {
 		"GET", "/bar/",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,
@@ -195,6 +197,7 @@ func TestRouterPanic(t *testing.T) {
 		"GET", "/panic",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,
@@ -258,6 +261,7 @@ func TestRouterPanicObject(t *testing.T) {
 		"GET", "/panic",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,
@@ -321,6 +325,7 @@ func TestRouterPanicNilPointer(t *testing.T) {
 		"GET", "/panic",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,
@@ -388,6 +393,7 @@ func TestConflictingRoutes(t *testing.T) {
 		"GET", "/foo",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,
@@ -406,6 +412,7 @@ func TestConflictingRoutes(t *testing.T) {
 		"GET", "/foo",
 		zanzibar.NewRouterEndpointContext(
 			bgateway.ActualGateway.ContextExtractor,
+			bgateway.ActualGateway.ContextMetrics,
 			bgateway.ActualGateway.Logger,
 			bgateway.ActualGateway.AllHostScope,
 			bgateway.ActualGateway.Tracer,

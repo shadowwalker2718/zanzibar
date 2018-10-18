@@ -32,12 +32,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	module "github.com/uber/zanzibar/examples/example-gateway/build/endpoints/baz/module"
+	workflow "github.com/uber/zanzibar/examples/example-gateway/build/endpoints/baz/workflow"
+	endpointsBazBaz "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/endpoints/baz/baz"
 	zanzibar "github.com/uber/zanzibar/runtime"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	workflow "github.com/uber/zanzibar/examples/example-gateway/build/endpoints/baz/workflow"
-	endpointsBazBaz "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/endpoints/baz/baz"
 )
 
 // SimpleServiceHeaderSchemaHandler is the handler for "/baz/header-schema"
@@ -52,7 +51,7 @@ func NewSimpleServiceHeaderSchemaHandler(deps *module.Dependencies) *SimpleServi
 		Dependencies: deps,
 	}
 	handler.endpoint = zanzibar.NewRouterEndpointContext(
-		deps.Default.ContextExtractor, deps.Default.Logger, deps.Default.Scope, deps.Default.Tracer,
+		deps.Default.ContextExtractor, deps.Default.ContextMetrics, deps.Default.Logger, deps.Default.Scope, deps.Default.Tracer,
 		"baz", "headerSchema",
 		handler.HandleRequest,
 	)
@@ -85,7 +84,7 @@ func (h *SimpleServiceHeaderSchemaHandler) HandleRequest(
 				zap.String("stacktrace", stacktrace),
 				zap.String("endpoint", h.endpoint.EndpointName))
 
-			h.endpoint.ContextMetrics.EndpointMetrics.Panic.Inc(1)
+			h.endpoint.ContextMetrics.GetOrAddEndpointMetrics(ctx).Panic.Inc(1)
 			res.SendError(502, "Unexpected workflow panic, recovered at endpoint.", nil)
 		}
 	}()

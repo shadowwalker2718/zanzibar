@@ -118,8 +118,6 @@ func NewTChannelEndpointWithPostResponseCB(
 ) *TChannelEndpoint {
 	contextLogger := NewContextLogger(logger)
 	contextMetrics := NewContextMetrics(scope)
-	scopeFields := map[string]string{scopeFieldEndpoint: endpointID, scopeFieldHandler: handlerID}
-	contextMetrics.MakeEndpointMetrics(scopeFields)
 
 	return &TChannelEndpoint{
 		TChannelHandler: handler,
@@ -130,7 +128,7 @@ func NewTChannelEndpointWithPostResponseCB(
 		Logger:          logger,
 		Scope:           scope,
 		contextLogger:   contextLogger,
-		ContextMetrics:  *contextMetrics,
+		ContextMetrics:  contextMetrics,
 	}
 }
 
@@ -196,7 +194,7 @@ func (s *TChannelRouter) Handle(ctx context.Context, call *tchannel.InboundCall)
 		ctx:      ctx,
 	}
 
-	c.start()
+	c.start(ctx)
 	go func() { errc <- s.handle(ctx, &c) }()
 	select {
 	case <-ctx.Done():
@@ -209,7 +207,7 @@ func (s *TChannelRouter) Handle(ctx context.Context, call *tchannel.InboundCall)
 		}
 	case err = <-errc:
 	}
-	c.finish(err)
+	c.finish(ctx, err)
 }
 
 func (s *TChannelRouter) handle(
@@ -221,8 +219,18 @@ func (s *TChannelRouter) handle(
 		return err
 	}
 
-	c.makeTchannelMetrics(ctx, s.extractor)
-	c.endpoint.ContextMetrics.InboundTChannelMetrics.Recvd.Inc(1)
+	scopeFields := map[string]string{
+		scopeFieldEndpoint:      c.endpoint.EndpointID,
+		scopeFieldHandler:       c.endpoint.HandlerID,
+		scopeFieldRequestMethod: c.endpoint.Method}
+	ctx = WithEndpointScopeFields(ctx, scopeFields)
+	ctx = WithEndpointRequestHeadersField(ctx, c.reqHeaders)
+	for k, v := range s.extractor.ExtractScopeTags(ctx) {
+		scopeFields[k] = v
+	}
+
+	ctx = WithRequestScopeFields(ctx, scopeFields)
+	c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).Recvd.Inc(1)
 	wireValue, err := c.readReqBody(ctx)
 	if err != nil {
 		return err
@@ -249,23 +257,23 @@ func (s *TChannelRouter) handle(
 	return err
 }
 
-func (c *tchannelInboundCall) start() {
+func (c *tchannelInboundCall) start(ctx context.Context) {
 	c.startTime = time.Now()
-	c.endpoint.ContextMetrics.EndpointMetrics.Recvd.Inc(1)
+	c.endpoint.ContextMetrics.GetOrAddEndpointMetrics(ctx).Recvd.Inc(1)
 }
 
-func (c *tchannelInboundCall) finish(err error) {
+func (c *tchannelInboundCall) finish(ctx context.Context, err error) {
 	c.finishTime = time.Now()
 
 	// emit metrics
 	if err != nil {
-		c.endpoint.ContextMetrics.InboundTChannelMetrics.SystemErrors.IncrErr(err, 1)
+		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).SystemErrors.IncrErr(err, 1)
 	} else if !c.success {
-		c.endpoint.ContextMetrics.InboundTChannelMetrics.AppErrors.Inc(1)
+		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).AppErrors.Inc(1)
 	} else {
-		c.endpoint.ContextMetrics.InboundTChannelMetrics.Success.Inc(1)
+		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).Success.Inc(1)
 	}
-	c.endpoint.ContextMetrics.InboundTChannelMetrics.Latency.Record(c.finishTime.Sub(c.startTime))
+	c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).Latency.Record(c.finishTime.Sub(c.startTime))
 
 	// write logs
 	LogErrorWarnTimeoutContext(c.ctx, c.endpoint.contextLogger, err, "Thrift server error")
@@ -288,20 +296,6 @@ func (c *tchannelInboundCall) logFields() []zapcore.Field {
 	}
 
 	return fields
-}
-
-func (c *tchannelInboundCall) makeTchannelMetrics(ctx context.Context, extractor ContextExtractor) {
-	scopeFields := map[string]string{
-		scopeFieldEndpoint:      c.endpoint.EndpointID,
-		scopeFieldHandler:       c.endpoint.HandlerID,
-		scopeFieldRequestMethod: c.endpoint.Method}
-	ctx, tags := WithScopeFields(ctx, scopeFields)
-	ctx = WithEndpointRequestHeadersField(ctx, c.reqHeaders)
-	for k, v := range extractor.ExtractScopeTags(ctx) {
-		tags[k] = v
-	}
-
-	c.endpoint.ContextMetrics.MakeInboundTChannelMetrics(tags)
 }
 
 // readReqHeaders reads request headers from arg2

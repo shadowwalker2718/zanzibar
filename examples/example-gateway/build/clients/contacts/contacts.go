@@ -29,9 +29,7 @@ import (
 	"time"
 
 	module "github.com/uber/zanzibar/examples/example-gateway/build/clients/contacts/module"
-
 	clientsContactsContacts "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/contacts/contacts"
-
 	zanzibar "github.com/uber/zanzibar/runtime"
 )
 

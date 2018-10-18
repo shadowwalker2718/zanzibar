@@ -32,11 +32,8 @@ import (
 
 	"github.com/pkg/errors"
 	module "github.com/uber/zanzibar/examples/example-gateway/build/clients/bar/module"
-
 	clientsBarBar "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/bar/bar"
-
 	clientsFooFoo "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/foo/foo"
-
 	zanzibar "github.com/uber/zanzibar/runtime"
 )
 

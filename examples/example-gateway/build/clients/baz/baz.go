@@ -34,7 +34,6 @@ import (
 	module "github.com/uber/zanzibar/examples/example-gateway/build/clients/baz/module"
 	clientsBazBase "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/baz/base"
 	clientsBazBaz "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/baz/baz"
-
 	zanzibar "github.com/uber/zanzibar/runtime"
 	"go.uber.org/zap"
 )

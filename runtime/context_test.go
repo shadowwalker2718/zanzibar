@@ -75,28 +75,49 @@ func TestGetEndpointRequestHeadersFromCtx(t *testing.T) {
 	assert.Equal(t, expected, requestHeaders)
 }
 
-func TestWithScopeFields(t *testing.T) {
+func TestWithEndpointScopeFields(t *testing.T) {
 	expected := map[string]string{"endpoint": "tincup", "handler": "exchange"}
-	ctx, fields := WithScopeFields(context.TODO(), expected)
+	ctx := WithEndpointScopeFields(context.TODO(), expected)
+	rs := ctx.Value(endpointScopeFields)
+	scopes, ok := rs.(map[string]string)
+
+	assert.True(t, ok)
+	assert.Equal(t, expected, scopes)
+}
+
+func TestGetEndpointScopeFieldsFromCtx(t *testing.T) {
+	expected := map[string]string{"endpoint": "tincup", "handler": "exchange"}
+	scope := map[string]string{"endpoint": "tincup", "handler": "exchange"}
+	ctx := WithEndpointScopeFields(context.TODO(), scope)
+	scopes := GetEndpointScopeFieldsFromCtx(ctx)
+	assert.Equal(t, expected, scopes)
+
+	expected = map[string]string{}
+	ctx = context.TODO()
+	scopes = GetEndpointScopeFieldsFromCtx(ctx)
+	assert.Equal(t, expected, scopes)
+}
+
+func TestWithRequestScopeFields(t *testing.T) {
+	expected := map[string]string{"region": "san_francisco", "os": "ios"}
+	ctx := WithRequestScopeFields(context.TODO(), expected)
 	rs := ctx.Value(requestScopeFields)
 	scopes, ok := rs.(map[string]string)
 
 	assert.True(t, ok)
 	assert.Equal(t, expected, scopes)
-	assert.Equal(t, expected, fields)
 }
 
-func TestGetScopeFieldsFromCtx(t *testing.T) {
-	expected := map[string]string{"endpoint": "tincup", "handler": "exchange"}
-	scope := map[string]string{"endpoint": "tincup", "handler": "exchange"}
-	ctx, fields := WithScopeFields(context.TODO(), scope)
-	scopes := GetScopeFieldsFromCtx(ctx)
-	assert.Equal(t, expected, fields)
+func TestGetRequestScopeFieldsFromCtx(t *testing.T) {
+	expected := map[string]string{"region": "san_francisco", "os": "ios"}
+	scope := map[string]string{"region": "san_francisco", "os": "ios"}
+	ctx := WithRequestScopeFields(context.TODO(), scope)
+	scopes := GetRequestScopeFieldsFromCtx(ctx)
 	assert.Equal(t, expected, scopes)
 
 	expected = map[string]string{}
 	ctx = context.TODO()
-	scopes = GetScopeFieldsFromCtx(ctx)
+	scopes = GetRequestScopeFieldsFromCtx(ctx)
 	assert.Equal(t, expected, scopes)
 }
 

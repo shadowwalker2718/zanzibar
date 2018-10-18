@@ -32,12 +32,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	module "github.com/uber/zanzibar/examples/example-gateway/build/endpoints/contacts/module"
+	endpointsContactsContacts "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/endpoints/contacts/contacts"
+	customContacts "github.com/uber/zanzibar/examples/example-gateway/endpoints/contacts"
 	zanzibar "github.com/uber/zanzibar/runtime"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	endpointsContactsContacts "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/endpoints/contacts/contacts"
-	customContacts "github.com/uber/zanzibar/examples/example-gateway/endpoints/contacts"
 )
 
 // ContactsSaveContactsHandler is the handler for "/contacts/:userUUID/contacts"
@@ -52,7 +51,7 @@ func NewContactsSaveContactsHandler(deps *module.Dependencies) *ContactsSaveCont
 		Dependencies: deps,
 	}
 	handler.endpoint = zanzibar.NewRouterEndpointContext(
-		deps.Default.ContextExtractor, deps.Default.Logger, deps.Default.Scope, deps.Default.Tracer,
+		deps.Default.ContextExtractor, deps.Default.ContextMetrics, deps.Default.Logger, deps.Default.Scope, deps.Default.Tracer,
 		"contacts", "saveContacts",
 		handler.HandleRequest,
 	)
@@ -85,7 +84,7 @@ func (h *ContactsSaveContactsHandler) HandleRequest(
 				zap.String("stacktrace", stacktrace),
 				zap.String("endpoint", h.endpoint.EndpointName))
 
-			h.endpoint.ContextMetrics.EndpointMetrics.Panic.Inc(1)
+			h.endpoint.ContextMetrics.GetOrAddEndpointMetrics(ctx).Panic.Inc(1)
 			res.SendError(502, "Unexpected workflow panic, recovered at endpoint.", nil)
 		}
 	}()

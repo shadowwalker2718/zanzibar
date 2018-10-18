@@ -33,7 +33,6 @@ import (
 	tchannel "github.com/uber/tchannel-go"
 	module "github.com/uber/zanzibar/examples/example-gateway/build/clients/corge/module"
 	clientsCorgeCorge "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/corge/corge"
-
 	zanzibar "github.com/uber/zanzibar/runtime"
 	"go.uber.org/zap"
 )
