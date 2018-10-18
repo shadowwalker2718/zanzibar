@@ -226,7 +226,7 @@ func (router *HTTPRouter) RegisterRaw(
 	router.httpRouter.Handler(method, prefix, handler)
 }
 
-// Register will register an endpoint with the router.
+// Deprecated: Register will register an endpoint with the router.
 func (router *HTTPRouter) Register(
 	method, urlpattern string,
 	endpoint *RouterEndpoint,

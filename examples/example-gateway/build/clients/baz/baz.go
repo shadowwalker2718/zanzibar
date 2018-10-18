@@ -31,7 +31,6 @@ import (
 	"time"
 
 	tchannel "github.com/uber/tchannel-go"
-
 	module "github.com/uber/zanzibar/examples/example-gateway/build/clients/baz/module"
 	clientsBazBase "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/baz/base"
 	clientsBazBaz "github.com/uber/zanzibar/examples/example-gateway/build/gen-code/clients/baz/baz"

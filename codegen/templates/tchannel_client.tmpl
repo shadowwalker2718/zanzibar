@@ -10,7 +10,6 @@ import (
 	"time"
 
 	tchannel "github.com/uber/tchannel-go"
-
 	module "{{$instance.PackageInfo.ModulePackagePath}}"
 	{{range $idx, $pkg := .IncludedPackages -}}
 	{{$pkg.AliasName}} "{{$pkg.PackageName}}"

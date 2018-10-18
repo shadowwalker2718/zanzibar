@@ -201,7 +201,7 @@ type commonMetrics struct {
 // EndpointMetrics ...
 type EndpointMetrics struct {
 	Panic tally.Counter // [inbound|outbound].calls.panics
-	Recvd tally.Counter // [inbound|outbound].calls.panics
+	Recvd tally.Counter // [inbound|outbound].calls.recvd
 }
 
 type tchannelMetrics struct {

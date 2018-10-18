@@ -148,7 +148,7 @@ func WithLogFields(ctx context.Context, newFields ...zap.Field) context.Context 
 	return context.WithValue(ctx, requestLogFields, accumulateLogFields(ctx, newFields))
 }
 
-// WithScopeFields returns a new context with the given scope fields attached to context.Context
+// WithScopeFields returns a new context and tags with the given scope fields attached to context.Context
 func WithScopeFields(ctx context.Context, newFields map[string]string) (context.Context, map[string]string) {
 	fields := GetScopeFieldsFromCtx(ctx)
 	for k, v := range newFields {
@@ -288,7 +288,7 @@ func NewContextMetrics(scope tally.Scope) *ContextMetrics {
 }
 
 // MakeInboundHTTPMetrics add tags to scope and create inbound http metrics
-func (c *ContextMetrics) MakeInboundHTTPMetrics(tags map[string]string) {
+func (c *ContextMetrics) MakeInboundHTTPMetrics(tags map[string]string)  {
 	scope := c.scope.Tagged(tags)
 	c.InboundHTTPMetrics = NewInboundHTTPMetrics(scope)
 }
