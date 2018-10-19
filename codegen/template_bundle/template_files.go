@@ -2081,13 +2081,15 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
+	zanzibar "github.com/uber/zanzibar/runtime"
 	tchannel "github.com/uber/tchannel-go"
+
 	module "{{$instance.PackageInfo.ModulePackagePath}}"
 	{{range $idx, $pkg := .IncludedPackages -}}
 	{{$pkg.AliasName}} "{{$pkg.PackageName}}"
 	{{end}}
-	zanzibar "github.com/uber/zanzibar/runtime"
-	"go.uber.org/zap"
 )
 
 {{$clientID := .ClientID -}}
@@ -2272,7 +2274,7 @@ func tchannel_clientTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tchannel_client.tmpl", size: 6269, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "tchannel_client.tmpl", size: 6271, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2286,11 +2288,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/uber/zanzibar/runtime"
+	"go.uber.org/thriftrw/wire"
+
 	{{range $idx, $pkg := .IncludedPackages -}}
 	{{$pkg.AliasName}} "{{$pkg.PackageName}}"
 	{{end}}
-	"github.com/uber/zanzibar/runtime"
-	"go.uber.org/thriftrw/wire"
 )
 
 {{$exposedMethods := .ExposedMethods -}}
@@ -2390,7 +2393,7 @@ func tchannel_client_test_serverTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tchannel_client_test_server.tmpl", size: 3013, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "tchannel_client_test_server.tmpl", size: 3014, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
