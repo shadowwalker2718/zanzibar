@@ -933,11 +933,12 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	zanzibar "github.com/uber/zanzibar/runtime"
+
 	module "{{$instance.PackageInfo.ModulePackagePath}}"
-	{{range $idx, $pkg := .IncludedPackages}}
+	{{range $idx, $pkg := .IncludedPackages -}}
 	{{$pkg.AliasName}} "{{$pkg.PackageName}}"
 	{{end}}
-	zanzibar "github.com/uber/zanzibar/runtime"
 )
 
 {{- $clientID := .ClientID -}}
@@ -1219,7 +1220,7 @@ func http_clientTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "http_client.tmpl", size: 7935, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
+	info := bindataFileInfo{name: "http_client.tmpl", size: 7938, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
