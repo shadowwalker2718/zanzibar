@@ -186,6 +186,12 @@ func (s *TChannelRouter) Handle(ctx context.Context, call *tchannel.InboundCall)
 		zap.String(logFieldRequestMethod, e.Method),
 	)
 
+	scopeFields := map[string]string{
+		scopeFieldEndpoint:      e.EndpointID,
+		scopeFieldHandler:       e.HandlerID,
+		scopeFieldRequestMethod: e.Method}
+	ctx = WithEndpointScopeFields(ctx, scopeFields)
+
 	var err error
 	errc := make(chan error, 1)
 	c := tchannelInboundCall{
@@ -207,6 +213,7 @@ func (s *TChannelRouter) Handle(ctx context.Context, call *tchannel.InboundCall)
 		}
 	case err = <-errc:
 	}
+
 	c.finish(ctx, err)
 }
 
@@ -219,18 +226,14 @@ func (s *TChannelRouter) handle(
 		return err
 	}
 
-	scopeFields := map[string]string{
-		scopeFieldEndpoint:      c.endpoint.EndpointID,
-		scopeFieldHandler:       c.endpoint.HandlerID,
-		scopeFieldRequestMethod: c.endpoint.Method}
-	ctx = WithEndpointScopeFields(ctx, scopeFields)
-	ctx = WithEndpointRequestHeadersField(ctx, c.reqHeaders)
-	for k, v := range s.extractor.ExtractScopeTags(ctx) {
+	scopeFields := GetEndpointScopeFieldsFromCtx(c.ctx)
+	c.ctx = WithEndpointRequestHeadersField(c.ctx, c.reqHeaders)
+	for k, v := range s.extractor.ExtractScopeTags(c.ctx) {
 		scopeFields[k] = v
 	}
 
-	ctx = WithRequestScopeFields(ctx, scopeFields)
-	c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).Recvd.Inc(1)
+	c.ctx = WithRequestScopeFields(c.ctx, scopeFields)
+	c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(c.ctx).Recvd.Inc(1)
 	wireValue, err := c.readReqBody(ctx)
 	if err != nil {
 		return err
@@ -267,13 +270,13 @@ func (c *tchannelInboundCall) finish(ctx context.Context, err error) {
 
 	// emit metrics
 	if err != nil {
-		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).SystemErrors.IncrErr(err, 1)
+		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(c.ctx).SystemErrors.IncrErr(err, 1)
 	} else if !c.success {
-		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).AppErrors.Inc(1)
+		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(c.ctx).AppErrors.Inc(1)
 	} else {
-		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).Success.Inc(1)
+		c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(c.ctx).Success.Inc(1)
 	}
-	c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(ctx).Latency.Record(c.finishTime.Sub(c.startTime))
+	c.endpoint.ContextMetrics.GetOrAddInboundTChannelMetrics(c.ctx).Latency.Record(c.finishTime.Sub(c.startTime))
 
 	// write logs
 	LogErrorWarnTimeoutContext(c.ctx, c.endpoint.contextLogger, err, "Thrift server error")
