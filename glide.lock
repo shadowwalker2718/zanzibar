@@ -1,5 +1,5 @@
-hash: 5bc390ca2677f02ccd0e07e337e2e0b4be3ca21d3f2d60cf4f4d5967ff666c3c
-updated: 2018-11-15T13:55:27.615724786-08:00
+hash: 6a6f85a9d3d6f15779660f0ca2fc87570bc7af00440ba1a5f56b50552cbdadc1
+updated: 2018-11-29T12:36:08.620871511-08:00
 imports:
 - name: github.com/anmitsu/go-shlex
   version: 648efa622239a2f6ff949fed78ee37b48d499ba4
@@ -22,14 +22,14 @@ imports:
 - name: github.com/go-yaml/yaml
   version: a83829b6f1293c91addabc89d0571c246397bbf4
 - name: github.com/golang/mock
-  version: 8a44ef6e8be577e050008c7886f24fc705d709fb
+  version: bcfe3c1f21d5271939479786888af1338fa1b25c
   subpackages:
   - gomock
   - mockgen/model
 - name: github.com/google/uuid
-  version: 16ca3eab7d2086fd5a82993a291cbf3b87fe38b7
+  version: 9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8
 - name: github.com/jessevdk/go-flags
-  version: 1c38ed7ad0cc3d9e66649ac398c30e45f395c4eb
+  version: 5de817a9aa209ed35a164cb04aec82b7df1a47a6
 - name: github.com/julienschmidt/httprouter
   version: 26a05976f9bf5c3aa992cc20e8588c359418ee58
 - name: github.com/kardianos/osext
@@ -73,6 +73,7 @@ imports:
   subpackages:
   - assert
   - require
+  - suite
 - name: github.com/uber-go/atomic
   version: e682c1008ac17bf26d2e4b5ad6cdd08520ed0b22
 - name: github.com/uber-go/tally
@@ -115,8 +116,15 @@ imports:
   version: 1ea20fb1cbb1cc08cbd0d913a96dead89aa18289
 - name: go.uber.org/dig
   version: 12c8adaa5e6a24ad02198588082d95582ee16e5b
+  subpackages:
+  - internal/digreflect
+  - internal/dot
 - name: go.uber.org/fx
   version: 9c82e1daccdcbd27387a1f044bd3dc6d3f878bf4
+  subpackages:
+  - internal/fxlog
+  - internal/fxreflect
+  - internal/lifecycle
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/thriftrw
@@ -154,7 +162,7 @@ imports:
   - zapcore
   - zaptest/observer
 - name: golang.org/x/net
-  version: adae6a3d119ae4890b46832a2e88a95adc62b8e7
+  version: fae4c4e3ad76c295c3d6d259f898136b4bf833a8
   subpackages:
   - context
 - name: golang.org/x/tools
@@ -164,7 +172,7 @@ imports:
 - name: gopkg.in/validator.v2
   version: 135c24b11c19e52befcae2ec3fca5d9b78c4e98e
 - name: gopkg.in/yaml.v2
-  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
+  version: 51d6538a90f86fe93ac480b35f37b2be17fef232
 - name: honnef.co/go/tools
   version: e3ad64cb4ed3e25a30bf42def711f9cb5b004f72
   subpackages:
