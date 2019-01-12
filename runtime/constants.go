@@ -34,6 +34,9 @@ const (
 	// MetricEndpointPanics is endpoint level panic counter
 	MetricEndpointPanics = "endpoint.panic"
 
+	// MetricEndpointAppErrors is endpoint level panic counter
+	MetricEndpointAppErrors = "endpoint.app-errors-err"
+
 	clientRequest      = "client.request"
 	clientSuccess      = "client.success"
 	clientStatus       = "client.status"
